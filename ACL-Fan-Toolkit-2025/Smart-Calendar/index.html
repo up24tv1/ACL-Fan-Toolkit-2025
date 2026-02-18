@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATX Festival Command Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#070b1a;
+      --surface:#111833;
+      --surface-2:#19224a;
+      --line:#2d3a75;
+      --text:#f1f5ff;
+      --muted:#9db0e8;
+      --accent:#6da3ff;
+      --good:#4ade80;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Manrope',system-ui,sans-serif;background:radial-gradient(circle at top right,#1c2f73,transparent 45%),var(--bg);color:var(--text);min-height:100vh}
+    header{position:sticky;top:0;z-index:20;background:rgba(7,11,26,.9);backdrop-filter: blur(10px);border-bottom:1px solid var(--line);padding:14px 24px}
+    .headline{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+    h1{font-size:clamp(1.25rem,2.5vw,1.9rem)}
+    .sub{font-size:.9rem;color:var(--muted);margin-top:4px}
+    .stats{display:flex;gap:10px;flex-wrap:wrap}
+    .chip{background:var(--surface);border:1px solid var(--line);padding:8px 12px;border-radius:10px;font-size:.82rem}
+    .chip strong{color:var(--accent)}
+
+    .layout{display:grid;grid-template-columns:320px 1fr 360px;gap:16px;padding:16px;max-width:1700px;margin:0 auto}
+    .panel{background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line);border-radius:16px;padding:16px}
+    .panel h2{font-size:1rem;margin-bottom:12px}
+    .muted{color:var(--muted);font-size:.84rem}
+
+    .controls label{display:block;font-size:.84rem;color:var(--muted);margin-top:12px;margin-bottom:6px}
+    input,select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1330;color:var(--text)}
+    .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+    .check{background:#0b1330;padding:8px;border:1px solid var(--line);border-radius:10px;font-size:.84rem}
+    .btn{width:100%;margin-top:10px;background:linear-gradient(135deg,var(--accent),#4f7bf5);color:white;border:none;padding:10px;border-radius:10px;font-weight:700;cursor:pointer}
+    .btn.alt{background:#1a2553}
+    .btn.warn{background:linear-gradient(135deg,#f59e0b,#f97316)}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+    .day{padding:12px;border:1px solid var(--line);background:#0b1330;border-radius:12px}
+    .day h3{font-size:.95rem;color:#b9cbff;margin-bottom:10px}
+    .event{border:1px solid #37427d;background:#121a3f;border-radius:12px;padding:10px;margin-bottom:8px}
+    .event .top{display:flex;justify-content:space-between;gap:8px;align-items:start}
+    .title{font-size:.9rem;font-weight:700}
+    .time{font-size:.76rem;color:var(--warn)}
+    .meta{font-size:.75rem;color:var(--muted);margin-top:6px;line-height:1.5}
+    .tags{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+    .tag{font-size:.7rem;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#0b1330}
+    .actions{display:flex;gap:8px;margin-top:8px}
+    .mini{font-size:.75rem;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:#0b1330;color:var(--text);text-decoration:none;cursor:pointer}
+
+    .plan-list{list-style:none;margin-top:8px;display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow:auto}
+    .plan-item{background:#0b1330;border:1px solid var(--line);border-radius:10px;padding:10px}
+    .plan-item strong{display:block;font-size:.82rem}
+    .pill{display:inline-block;font-size:.72rem;padding:2px 7px;border-radius:999px;margin-top:4px}
+    .good{background:rgba(74,222,128,.2);color:var(--good)}
+    .bad{background:rgba(251,113,133,.2);color:var(--bad)}
+
+    .budget{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#0b1330}
+    .bar{height:8px;background:#1d2a5e;border-radius:999px;margin-top:6px}
+    .bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--warn));width:0}
+
+    .weather{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .weather .wx{padding:9px;border:1px solid var(--line);border-radius:10px;background:#0b1330;font-size:.8rem;display:flex;justify-content:space-between}
+
+    .notice{font-size:.8rem;margin-top:8px;padding:8px;border-radius:10px;background:rgba(109,163,255,.12);border:1px solid var(--line);display:none}
+    @media (max-width:1250px){.layout{grid-template-columns:300px 1fr}.right{grid-column:span 2}}
+    @media (max-width:840px){.layout{grid-template-columns:1fr}.right{grid-column:span 1}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="headline">
+    <div>
+      <h1>ATX Festival Command Center</h1>
+      <p class="sub">Plan smarter with budget control, conflict prevention, map links, and real-time readiness.</p>
+    </div>
+    <div class="stats">
+      <div class="chip">Saved events: <strong id="statEvents">0</strong></div>
+      <div class="chip">Budget used: <strong id="statBudget">$0</strong></div>
+      <div class="chip">Conflict alerts: <strong id="statConflict">0</strong></div>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="panel controls">
+    <h2>Plan Controls</h2>
+    <label for="search">Search artist, food, meetup</label>
+    <input id="search" type="text" placeholder="e.g. Sabrina, coffee, yoga" />
+
+    <label for="dayFilter">Day</label>
+    <select id="dayFilter"><option value="all">All days</option></select>
+
+    <label for="budgetInput">Daily budget ($)</label>
+    <input id="budgetInput" type="number" min="0" value="120" />
+
+    <label>Categories</label>
+    <div class="checks">
+      <label class="check"><input type="checkbox" value="music" checked> Music</label>
+      <label class="check"><input type="checkbox" value="food" checked> Food</label>
+      <label class="check"><input type="checkbox" value="meetup" checked> Meetup</label>
+      <label class="check"><input type="checkbox" value="other" checked> Other</label>
+    </div>
+
+    <button class="btn" id="exportBtn">Export itinerary (.ics)</button>
+    <button class="btn alt" id="addBreakBtn">Auto add hydration breaks</button>
+    <button class="btn warn" id="clearBtn">Clear saved plan</button>
+    <p class="notice" id="notice"></p>
+  </aside>
+
+  <section class="panel">
+    <h2>Festival Schedule</h2>
+    <p class="muted">Includes estimated spend, crowd level, and stage distance awareness.</p>
+    <div id="scheduleGrid" class="grid" style="margin-top:12px"></div>
+  </section>
+
+  <aside class="panel right">
+    <h2>My Itinerary</h2>
+    <ul id="planList" class="plan-list"></ul>
+    <div class="budget">
+      <div class="muted">Daily budget tracking</div>
+      <div style="margin-top:4px;font-size:.85rem"><strong id="budgetText">$0</strong> / <span id="budgetCap">$120</span></div>
+      <div class="bar"><span id="budgetBar"></span></div>
+    </div>
+
+    <h2 style="margin-top:14px">Weather & Logistics (mock API-ready)</h2>
+    <div class="weather" id="weatherPanel"></div>
+    <p class="muted" style="margin-top:10px">Tip: leave 20-30 min for crossing large stage zones during peak crowds.</p>
+  </aside>
+</main>
+
+<script>
+const events = [
+  {id:'fri1-001',day:'Friday, Oct 3',category:'other',title:'Morning Yoga Session',start:'10:00',end:'11:00',stage:'Barton Lawn',zone:'South',cost:0,crowd:'Low',description:'Guided warm-up before gates get busy.'},
+  {id:'fri1-002',day:'Friday, Oct 3',category:'food',title:'Food Court Tour: Tacos & BBQ',start:'12:00',end:'13:00',stage:'ACL Eats',zone:'Central',cost:22,crowd:'Medium',description:'Curated vendor path with top-rated stalls.'},
+  {id:'fri1-003',day:'Friday, Oct 3',category:'music',title:'Sabrina Carpenter',start:'17:30',end:'19:00',stage:'Lady Bird Stage',zone:'East',cost:0,crowd:'High',description:'Prime pop slot. Arrive early for best view.'},
+  {id:'fri1-004',day:'Friday, Oct 3',category:'music',title:'Tyler, The Creator',start:'20:00',end:'21:30',stage:'Zilker Stage',zone:'West',cost:0,crowd:'High',description:'Major headline performance and visual show.'},
+  {id:'fri1-005',day:'Friday, Oct 3',category:'meetup',title:'Rainey Street Afterparty',start:'22:00',end:'01:00',stage:'Rainey Street',zone:'Offsite',cost:35,crowd:'Medium',description:'Late-night meetup with DJs and food trucks.'},
+  {id:'sat1-001',day:'Saturday, Oct 4',category:'other',title:'ATX Market & Art Fair',start:'10:00',end:'12:00',stage:'Market Plaza',zone:'North',cost:18,crowd:'Medium',description:'Local crafts, merch, prints and accessories.'},
+  {id:'sat1-002',day:'Saturday, Oct 4',category:'music',title:'Doja Cat',start:'18:00',end:'19:30',stage:'Barton Springs Stage',zone:'South',cost:0,crowd:'High',description:'Headliner with full dance production.'},
+  {id:'sat1-003',day:'Saturday, Oct 4',category:'meetup',title:'Sunset Photo Meetup',start:'19:45',end:'20:15',stage:'Hilltop',zone:'North',cost:0,crowd:'Low',description:'Golden-hour creator meetup.'},
+  {id:'sun1-001',day:'Sunday, Oct 5',category:'food',title:'Brunch & Mimosas',start:'11:00',end:'12:00',stage:'Food Court',zone:'Central',cost:25,crowd:'Medium',description:'Brunch set with local drinks and bites.'},
+  {id:'sun1-002',day:'Sunday, Oct 5',category:'music',title:'The Strokes',start:'17:00',end:'18:30',stage:'Lady Bird Stage',zone:'East',cost:0,crowd:'High',description:'Iconic closing weekend set.'},
+  {id:'sun2-001',day:'Sunday, Oct 12',category:'music',title:'Reneé Rapp',start:'15:30',end:'16:45',stage:'Barton Springs Stage',zone:'South',cost:0,crowd:'Medium',description:'Power-pop performance with live band.'},
+  {id:'sun2-002',day:'Sunday, Oct 12',category:'meetup',title:'Farewell Jam & Group Photo',start:'18:00',end:'18:45',stage:'Community Lawn',zone:'Central',cost:0,crowd:'Low',description:'Networking and final photo memory.'}
+];
+
+const weatherMock = {
+  'Friday, Oct 3':'88°F · Sunny · UV High',
+  'Saturday, Oct 4':'86°F · Partly Cloudy',
+  'Sunday, Oct 5':'84°F · Windy PM',
+  'Sunday, Oct 12':'82°F · Light shower chance'
+};
+
+const els = {
+  schedule: document.getElementById('scheduleGrid'),
+  search: document.getElementById('search'),
+  day: document.getElementById('dayFilter'),
+  checks: [...document.querySelectorAll('.checks input')],
+  planList: document.getElementById('planList'),
+  notice: document.getElementById('notice'),
+  budgetInput: document.getElementById('budgetInput'),
+  budgetBar: document.getElementById('budgetBar'),
+  budgetText: document.getElementById('budgetText'),
+  budgetCap: document.getElementById('budgetCap'),
+  statEvents: document.getElementById('statEvents'),
+  statBudget: document.getElementById('statBudget'),
+  statConflict: document.getElementById('statConflict'),
+  weatherPanel: document.getElementById('weatherPanel')
+};
+
+let plan = JSON.parse(localStorage.getItem('atxPlanV2') || '[]');
+let conflicts = 0;
+
+function toMin(t){const [h,m]=t.split(':').map(Number);return h*60+m;}
+function selectedCats(){return els.checks.filter(c=>c.checked).map(c=>c.value);}
+function showNotice(msg){els.notice.textContent=msg;els.notice.style.display='block';setTimeout(()=>els.notice.style.display='none',2600);}
+function save(){localStorage.setItem('atxPlanV2',JSON.stringify(plan));}
+
+function renderDayFilter(){
+  const days=[...new Set(events.map(e=>e.day))];
+  days.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;els.day.appendChild(o);});
+}
+
+function renderWeather(){
+  els.weatherPanel.innerHTML='';
+  Object.entries(weatherMock).forEach(([day,txt])=>{
+    const row=document.createElement('div');
+    row.className='wx';
+    row.innerHTML=`<span>${day}</span><strong>${txt}</strong>`;
+    els.weatherPanel.appendChild(row);
+  });
+}
+
+function filteredEvents(){
+  const s=els.search.value.toLowerCase().trim();
+  const day=els.day.value;
+  const cats=selectedCats();
+  return events.filter(e=>cats.includes(e.category) && (day==='all'||e.day===day) && (`${e.title} ${e.stage} ${e.description}`.toLowerCase().includes(s)));
+}
+
+function renderSchedule(){
+  const grouped = filteredEvents().reduce((a,e)=>((a[e.day]=a[e.day]||[]).push(e),a),{});
+  els.schedule.innerHTML='';
+  Object.keys(grouped).forEach(day=>{
+    const d=document.createElement('div');
+    d.className='day';
+    d.innerHTML=`<h3>${day}</h3>`;
+    grouped[day].sort((a,b)=>toMin(a.start)-toMin(b.start)).forEach(e=>{
+      const node=document.createElement('article');
+      node.className='event';
+      node.innerHTML=`
+        <div class="top"><div class="title">${e.title}</div><div class="time">${e.start}–${e.end}</div></div>
+        <div class="meta">${e.stage} · ${e.zone} zone · Crowd: ${e.crowd}<br>Estimated spend: $${e.cost}</div>
+        <div class="tags"><span class="tag">${e.category}</span><span class="tag">${e.zone}</span></div>
+        <div class="actions">
+          <button class="mini" data-add="${e.id}">Save</button>
+          <a class="mini" target="_blank" href="https://www.google.com/maps/search/${encodeURIComponent(e.stage + ' Austin')}" rel="noopener">Map</a>
+        </div>`;
+      d.appendChild(node);
+    });
+    els.schedule.appendChild(d);
+  });
+}
+
+function detectConflict(item){
+  return plan.some(ev=>ev.day===item.day && toMin(ev.start)<toMin(item.end) && toMin(item.start)<toMin(ev.end));
+}
+
+function addToPlan(id){
+  const ev=events.find(e=>e.id===id);
+  if(!ev) return;
+  if(plan.find(p=>p.id===id)){showNotice('Already saved in your itinerary.');return;}
+  if(detectConflict(ev)){conflicts += 1;showNotice('Time conflict detected. Event not added.');updateStats();return;}
+  plan.push(ev);save();renderPlan();updateStats();
+  showNotice('Event added successfully.');
+}
+
+function renderPlan(){
+  els.planList.innerHTML='';
+  if(!plan.length){els.planList.innerHTML='<li class="muted">No events saved yet.</li>';updateBudget();return;}
+  plan.sort((a,b)=>(a.day.localeCompare(b.day)||toMin(a.start)-toMin(b.start))).forEach(p=>{
+    const li=document.createElement('li');
+    li.className='plan-item';
+    li.innerHTML=`<strong>${p.title}</strong><span class="muted">${p.day} · ${p.start}-${p.end} · ${p.stage}</span><br>
+    <span class="pill ${p.cost>0?'bad':'good'}">$${p.cost}</span> <button class="mini" style="float:right" data-remove="${p.id}">Remove</button>`;
+    els.planList.appendChild(li);
+  });
+  updateBudget();
+}
+
+function updateBudget(){
+  const spent = plan.reduce((s,p)=>s+p.cost,0);
+  const cap = Number(els.budgetInput.value || 0);
+  const pct = cap ? Math.min((spent/cap)*100,100) : 0;
+  els.budgetText.textContent = `$${spent}`;
+  els.budgetCap.textContent = `$${cap}`;
+  els.budgetBar.style.width = `${pct}%`;
+}
+
+function updateStats(){
+  const spent = plan.reduce((s,p)=>s+p.cost,0);
+  els.statEvents.textContent = String(plan.length);
+  els.statBudget.textContent = `$${spent}`;
+  els.statConflict.textContent = String(conflicts);
+}
+
+function getNowICS(){return new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';}
+function formatICSDate(dayStr,timeStr){
+  const [m,d] = dayStr.split(', ')[1].split(' ');
+  const monthMap={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+  const [h,min]=timeStr.split(':').map(Number);
+  return new Date(Date.UTC(2025,monthMap[m]-1,Number(d),h,min)).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+}
+
+function exportICS(){
+  if(!plan.length){showNotice('Save at least one event before export.');return;}
+  let ics='BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//ATX Command Center//EN\n';
+  plan.forEach(ev=>{
+    ics += `BEGIN:VEVENT\nUID:${ev.id}@atx\nDTSTAMP:${getNowICS()}\nDTSTART:${formatICSDate(ev.day,ev.start)}\nDTEND:${formatICSDate(ev.day,ev.end)}\nSUMMARY:${ev.title}\nDESCRIPTION:${ev.description}\nLOCATION:${ev.stage}\nEND:VEVENT\n`;
+  });
+  ics += 'END:VCALENDAR';
+  const blob = new Blob([ics],{type:'text/calendar'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);link.download='ATX-Command-Center.ics';link.click();
+}
+
+function addHydration(){
+  [...new Set(events.map(e=>e.day))].forEach(day=>{
+    const b={id:`hydrate-${day}`,day,category:'other',title:'Hydration Break',start:'14:00',end:'14:15',stage:'Water Station',zone:'Central',cost:0,crowd:'Low',description:'Drink water, reset, sunscreen check.'};
+    if(!plan.find(p=>p.id===b.id) && !detectConflict(b)) plan.push(b);
+  });
+  save();renderPlan();updateStats();showNotice('Hydration blocks added where possible.');
+}
+
+// listeners
+els.search.addEventListener('input',renderSchedule);
+els.day.addEventListener('change',renderSchedule);
+els.checks.forEach(c=>c.addEventListener('change',renderSchedule));
+els.budgetInput.addEventListener('input',()=>{updateBudget();});
+document.getElementById('exportBtn').addEventListener('click',exportICS);
+document.getElementById('addBreakBtn').addEventListener('click',addHydration);
+document.getElementById('clearBtn').addEventListener('click',()=>{plan=[];save();renderPlan();updateStats();showNotice('Plan cleared.');});
+
+document.body.addEventListener('click',e=>{
+  const add=e.target.getAttribute('data-add');
+  const rem=e.target.getAttribute('data-remove');
+  if(add) addToPlan(add);
+  if(rem){plan=plan.filter(p=>p.id!==rem);save();renderPlan();updateStats();}
+});
+
+renderDayFilter();
+renderWeather();
+renderSchedule();
+renderPlan();
+updateStats();
+</script>
+</body>
+</html>
